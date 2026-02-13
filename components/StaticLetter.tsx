@@ -49,7 +49,8 @@ const StaticLetter: React.FC<StaticLetterProps> = ({ onBack, name }) => {
             love, happiness, and endless joy by your side. You are the most beautiful part 
             of my world, and I promise to cherish, respect, and love you with everything I have. 
             You aren't just my Valentine for today; you are my heart's choice for every day 
-            that follows. I love you more than words could ever truly capture.
+            that follows. I love you more than words could ever truly capture. Happy Valentines Day 
+            and Happy 3rd Anniversay my love!
           </p>
         </div>
 
