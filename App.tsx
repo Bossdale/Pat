@@ -1,38 +1,59 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { AppState } from './types';
 import ProposalView from './components/ProposalView';
 import StaticLetter from './components/StaticLetter';
+import ResponseInput from './components/ResponseInput';
+import ResponseLetter from './components/ResponseLetter';
 import FloatingHearts from './components/FloatingHearts';
 import PhotoCard from './components/PhotoCard';
-import { Heart, Stars, Camera, Mail, Lock, Calendar } from 'lucide-react';
+import { Heart, Stars, Music, Camera, Volume2, VolumeX, Mail, Lock, Calendar, PenLine, CheckCircle } from 'lucide-react';
 
-// Local Assets
+  // Local Assets Restored
 import photo1 from './assets/image1.png'; 
 import photo2 from './assets/image2.png';
 import loveSong from './assets/love_song.mp3';
 
+const STORAGE_KEY_TEXT = 'valentine_patricia_response_text';
+const STORAGE_KEY_SAVED = 'valentine_patricia_response_saved';
+
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.START);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [showLockedMessage, setShowLockedMessage] = useState(false);
+  
+  // Initialize state from LocalStorage
+  const [patriciaResponse, setPatriciaResponse] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY_TEXT) || '';
+  });
+  const [isResponseSaved, setIsResponseSaved] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY_SAVED) === 'true';
+  });
+  
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const TARGET_NAME = "Patricia Ayo";
   const UNLOCK_DATE = new Date('2026-02-14T00:00:00');
 
-  // Check if the current date is on or after the unlock date
   const isUnlocked = new Date() >= UNLOCK_DATE;
+  const MUSIC_URL = "https://cdn.pixabay.com/audio/2022/05/27/audio_1808f3030c.mp3";
+
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(e => console.log("Audio play blocked", e));
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   const startProposal = () => {
     setState(AppState.PROPOSAL);
-    
-    if (audioRef.current) {
-      // Ensure audio is unmuted and set volume to 70%
-      audioRef.current.muted = false;
-      audioRef.current.volume = 0.7;
-      
-      audioRef.current.play().catch(e => {
-        console.log("Audio playback was blocked by the browser. It usually requires a user click.", e);
-      });
+    if (audioRef.current && !isPlaying) {
+      audioRef.current.play().catch(e => console.log("Audio play blocked", e));
+      setIsPlaying(true);
     }
   };
 
@@ -43,6 +64,20 @@ const App: React.FC = () => {
       setShowLockedMessage(true);
       setTimeout(() => setShowLockedMessage(false), 3000);
     }
+  };
+
+  const handleResponseSubmit = (text: string) => {
+    setPatriciaResponse(text);
+    // We update the draft text in storage even before "Saving" so it isn't lost
+    localStorage.setItem(STORAGE_KEY_TEXT, text);
+    setState(AppState.RESPONSE_DISPLAY);
+  };
+
+  const handleSaveResponse = () => {
+    setIsResponseSaved(true);
+    localStorage.setItem(STORAGE_KEY_SAVED, 'true');
+    localStorage.setItem(STORAGE_KEY_TEXT, patriciaResponse);
+    setState(AppState.ACCEPTED);
   };
 
   const renderContent = () => {
@@ -80,7 +115,7 @@ const App: React.FC = () => {
           <div className="flex flex-col items-center text-center animate-in zoom-in duration-700 w-full max-w-4xl px-4">
             <div className="mb-12">
                <img 
-                src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeDF6aGd1eXJ2eXZseGVqNWt0NzE0YWxtMmpvNmloMmQ5aXQ0Y2l0cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/SYo1DFS8NLhhqzzjMU/giphy.gif" 
+                src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeDF6aGd1eXJ2eXZseGVqNWt0NzE0YWxtMmpvNmloMmQ5aXQ0Y2l0cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/SYo1DFS8NLhhqzzjMU/giphy.gif"
                 alt="Happy Bear" 
                 className="w-48 h-48 object-contain mb-4 mx-auto"
               />
@@ -101,29 +136,36 @@ const App: React.FC = () => {
               </div>
               <div className="flex flex-col md:flex-row items-center justify-center gap-12 px-4">
                 <div className="w-64">
-                  <PhotoCard src={photo1} caption="Wow ug nina! hehe" tilt="left" />
+                  <PhotoCard src={photo1} caption="Forever Yours" tilt="left" />
                 </div>
                 <div className="w-64">
-                  <PhotoCard src={photo2} caption="Forever Yours" tilt="right" />
+                  <PhotoCard src={photo2} caption="You & Me" tilt="right" />
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col items-center gap-4 mb-12">
-              <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col items-center gap-6 mb-12">
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Love Letter Button */}
                 <button 
                   onClick={handleLoveLetterClick}
-                  className={`${isUnlocked ? 'bg-rose-500 hover:bg-rose-600' : 'bg-gray-400 cursor-not-allowed opacity-80'} text-white font-bold px-10 py-4 rounded-full text-lg shadow-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden`}
+                  className={`${isUnlocked ? 'bg-rose-500 hover:bg-rose-600' : 'bg-gray-400 cursor-not-allowed opacity-80'} text-white font-bold px-8 py-4 rounded-full text-lg shadow-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden`}
                 >
                   {isUnlocked ? <Mail size={20} /> : <Lock size={20} />}
                   Love Letter 
                   {isUnlocked && <Stars size={20} className="fill-current" />}
-                  {!isUnlocked && (
-                    <div className="absolute bottom-0 left-0 w-full bg-black/10 py-0.5 text-[10px] font-bold tracking-widest uppercase">
-                      Unlocks Feb 14
-                    </div>
-                  )}
+                  {!isUnlocked && <div className="absolute bottom-0 left-0 w-full bg-black/10 py-0.5 text-[10px] font-bold tracking-widest uppercase">Unlocks 2026</div>}
                 </button>
+
+                {/* Response Button */}
+                <button 
+                  onClick={() => setState(isResponseSaved ? AppState.RESPONSE_DISPLAY : AppState.RESPONSE_INPUT)}
+                  className="bg-white text-rose-500 border-2 border-rose-500 font-bold px-8 py-4 rounded-full text-lg shadow-xl hover:bg-rose-50 flex items-center justify-center gap-3 transition-all transform hover:-translate-y-1"
+                >
+                  <PenLine size={20} /> {isResponseSaved ? "Your love letter" : "Create your love letter response"}
+                </button>
+
+                {/* Go Back Button */}
                 <button 
                   onClick={() => setState(AppState.PROPOSAL)}
                   className="bg-white text-rose-400 border border-rose-200 font-bold px-8 py-4 rounded-full text-lg shadow hover:bg-gray-50 transition-all"
@@ -135,7 +177,7 @@ const App: React.FC = () => {
               {showLockedMessage && (
                 <div className="animate-bounce flex items-center gap-2 text-rose-500 font-bold mt-2">
                   <Calendar size={18} />
-                  This letter opens on February 14, 2026! 🌹
+                  This surprise opens on February 14, 2026! 🌹
                 </div>
               )}
             </div>
@@ -144,6 +186,18 @@ const App: React.FC = () => {
 
       case AppState.LOVE_LETTER:
         return <StaticLetter name={TARGET_NAME} onBack={() => setState(AppState.ACCEPTED)} />;
+      
+      case AppState.RESPONSE_INPUT:
+        return (
+          <ResponseInput 
+            initialText={patriciaResponse}
+            onBack={() => setState(isResponseSaved ? AppState.RESPONSE_DISPLAY : AppState.ACCEPTED)} 
+            onSubmit={handleResponseSubmit} 
+          />
+        );
+      
+      case AppState.RESPONSE_DISPLAY:
+        return <ResponseLetter text={patriciaResponse} onBack={() => setState(AppState.RESPONSE_INPUT)} onSave={handleSaveResponse} />;
         
       default:
         return null;
@@ -153,8 +207,19 @@ const App: React.FC = () => {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-pink-50 via-white to-rose-50 overflow-x-hidden">
       <FloatingHearts />
-      
       <audio ref={audioRef} src={loveSong} loop preload="auto" />
+
+      <div className="fixed top-6 right-6 z-50">
+        <button 
+          onClick={toggleMusic}
+          className={`group flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-lg border-2 transition-all ${isPlaying ? 'text-rose-500 border-rose-200' : 'text-gray-400 border-gray-100'}`}
+        >
+          {isPlaying ? <Volume2 size={20} className="animate-pulse" /> : <VolumeX size={20} />}
+          <span className="text-sm font-bold overflow-hidden transition-all duration-300 w-0 group-hover:w-12">
+            {isPlaying ? 'Mute' : 'Play'}
+          </span>
+        </button>
+      </div>
 
       <main className="z-10 w-full flex items-center justify-center py-12">
         {renderContent()}
