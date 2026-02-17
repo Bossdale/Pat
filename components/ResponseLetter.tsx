@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { ArrowLeft, Heart, Sparkles, Save } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Heart, Sparkles, Save, Link, Check } from 'lucide-react';
 
 interface ResponseLetterProps {
   text: string;
@@ -9,6 +9,19 @@ interface ResponseLetterProps {
 }
 
 const ResponseLetter: React.FC<ResponseLetterProps> = ({ text, onBack, onSave }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyShareableLink = () => {
+    // Encode letter to Base64 to put in URL
+    const encoded = btoa(encodeURIComponent(text));
+    const url = new URL(window.location.origin);
+    url.searchParams.set('letter', encoded);
+    
+    navigator.clipboard.writeText(url.toString());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  };
+
   return (
     <div className="w-full max-w-2xl bg-[#fffaf0] rounded-sm shadow-2xl p-8 md:p-12 border-8 border-double border-rose-200 relative overflow-hidden animate-in fade-in zoom-in duration-1000">
       {/* Decorative background elements */}
@@ -22,7 +35,7 @@ const ResponseLetter: React.FC<ResponseLetterProps> = ({ text, onBack, onSave })
       <div className="relative z-10 font-serif">
         <div className="flex justify-between items-start mb-8 border-b border-rose-100 pb-4">
           <div>
-            <h2 className="text-3xl font-romantic text-rose-600 mb-1">To My Sherbin Deyl,</h2>
+            <h2 className="text-3xl font-romantic text-rose-600 mb-1">To My Valentine,</h2>
             <p className="text-rose-300 text-sm italic">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
           </div>
           <Sparkles className="text-rose-400" />
@@ -43,7 +56,15 @@ const ResponseLetter: React.FC<ResponseLetterProps> = ({ text, onBack, onSave })
           onClick={onSave}
           className="bg-rose-500 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:bg-rose-600 transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95"
         >
-          <Save size={18} /> Save Letter
+          <Save size={18} /> Save to this device
+        </button>
+
+        <button 
+          onClick={copyShareableLink}
+          className={`${copied ? 'bg-green-500' : 'bg-rose-100 text-rose-600 hover:bg-rose-200'} font-bold px-8 py-3 rounded-xl shadow transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95`}
+        >
+          {copied ? <Check size={18} className="text-white" /> : <Link size={18} />}
+          <span className={copied ? 'text-white' : ''}>{copied ? 'Link Copied!' : 'Copy Shareable Link'}</span>
         </button>
         
         <button 
@@ -53,6 +74,10 @@ const ResponseLetter: React.FC<ResponseLetterProps> = ({ text, onBack, onSave })
           <ArrowLeft size={14} /> Edit response
         </button>
       </div>
+      
+      <p className="text-center text-xs text-rose-300 mt-4 italic no-print">
+        Use the "Shareable Link" to see your letter on your phone or other devices!
+      </p>
       
       <style>{`
         @media print {

@@ -9,7 +9,7 @@ import FloatingHearts from './components/FloatingHearts';
 import PhotoCard from './components/PhotoCard';
 import { Heart, Stars, Music, Camera, Volume2, VolumeX, Mail, Lock, Calendar, PenLine, CheckCircle } from 'lucide-react';
 
-  // Local Assets Restored
+// Local Assets Restored
 import photo1 from './assets/image1.png'; 
 import photo2 from './assets/image2.png';
 import loveSong from './assets/love_song.mp3';
@@ -36,7 +36,28 @@ const App: React.FC = () => {
   const UNLOCK_DATE = new Date('2026-02-14T00:00:00');
 
   const isUnlocked = new Date() >= UNLOCK_DATE;
-  const MUSIC_URL = "https://cdn.pixabay.com/audio/2022/05/27/audio_1808f3030c.mp3";
+
+  // Check for URL-encoded letter for cross-device persistence
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const encodedLetter = params.get('letter');
+    
+    if (encodedLetter) {
+      try {
+        const decodedText = decodeURIComponent(atob(encodedLetter));
+        if (decodedText) {
+          setPatriciaResponse(decodedText);
+          setIsResponseSaved(true);
+          localStorage.setItem(STORAGE_KEY_TEXT, decodedText);
+          localStorage.setItem(STORAGE_KEY_SAVED, 'true');
+          // Move to memory view if we arrived via a link
+          setState(AppState.ACCEPTED);
+        }
+      } catch (e) {
+        console.error("Failed to decode shared letter", e);
+      }
+    }
+  }, []);
 
   const toggleMusic = () => {
     if (audioRef.current) {
@@ -68,7 +89,6 @@ const App: React.FC = () => {
 
   const handleResponseSubmit = (text: string) => {
     setPatriciaResponse(text);
-    // We update the draft text in storage even before "Saving" so it isn't lost
     localStorage.setItem(STORAGE_KEY_TEXT, text);
     setState(AppState.RESPONSE_DISPLAY);
   };
